@@ -40,9 +40,6 @@ class Scoreboard:
     @classmethod
     def from_file(cls, path):
         folder, basename = os.path.split(path)
-        framework_name = None
-        benchmark_name = None
-        task_name = None
         patterns = [
             cls.results_file,
             r"(?P<framework>[\w\-]+)_benchmark_(?P<benchmark>[\w\-]+)\.csv",
@@ -51,19 +48,14 @@ class Scoreboard:
             r"task_(?P<task>[\w\-]+)\.csv",
             r"(?P<framework>[\w\-]+)\.csv",
         ]
-        found = False
-        for pat in patterns:
-            m = re.fullmatch(pat, basename)
-            if m:
-                found = True
-                d = m.groupdict()
-                benchmark_name = 'benchmark' in d and d['benchmark']
-                task_name = 'task' in d and d['task']
-                framework_name = 'framework' in d and d['framework']
-                break
-
-        if not found:
+        match = next((re.fullmatch(pat, basename) for pat in patterns), None)
+        if match is None:
             return None
+
+        d = match.groupdict()
+        benchmark_name = d.get('benchmark', False)
+        task_name = d.get('task', False)
+        framework_name = d.get('framework', False)
 
         scores_dir = None if path == basename else folder
         return cls(framework_name=framework_name, benchmark_name=benchmark_name, task_name=task_name, scores_dir=scores_dir)
